@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You Will Be My Girl</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    font-family: 'Playfair Display', serif;
+    background: radial-gradient(circle at 30% 30%, #0d1b2a, #000000 80%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  .aurora {
+    position: absolute;
+    top: -25%;
+    left: -25%;
+    width: 150%;
+    height: 150%;
+    background: conic-gradient(from 180deg, #00c9ff, #6a11cb, #ff66cc, #ffcc70, #00c9ff);
+    filter: blur(180px) brightness(0.6);
+    animation: spin 20s linear infinite;
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  .raindrop { position: absolute; width: 2px; height: 15px; background: rgba(255,255,255,0.25); border-radius: 2px; animation: fall linear forwards; pointer-events: none; z-index: 1; }
+  @keyframes fall { 0% { transform: translateY(-10vh); opacity: 1; } 100% { transform: translateY(110vh); opacity: 0; } }
+
+  .particle { position: absolute; background: rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; animation: floatUp linear forwards; z-index: 1; }
+  @keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-120vh) scale(1); opacity: 0; } }
+
+  #text {
+    font-size: clamp(2.5em, 6vw, 5em);
+    letter-spacing: 6px;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+    z-index: 3;
+    text-shadow: 0 0 15px #fff, 0 0 30px #fff;
+  }
+
+  #text.show {
+    opacity: 1;
+    text-shadow: 0 0 20px #fff, 0 0 40px #fff;
+  }
+
+  .star { position: absolute; width: 20px; height: 20px; background: radial-gradient(circle, #fff 30%, transparent 70%); border-radius: 50%; pointer-events: none; opacity: 1; transform: translateY(0) scale(1); animation: starFloat 1.5s ease-out forwards; z-index: 5; }
+  @keyframes starFloat { 0% { transform: translateY(0) scale(0.8); opacity: 1; } 100% { transform: translateY(-80px) scale(1.4); opacity: 0; } }
+
+  #tapText { position: absolute; bottom: 40px; color: rgba(255,255,255,0.8); font-size: 1.2em; z-index: 10; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.8; } 50% { opacity: 0.3; } }
+</style>
+</head>
+<body>
+
+<div class="aurora"></div>
+<div id="text"></div>
+<div id="tapText">Tap anywhere to start 🎧</div>
+
+<audio id="bgMusic" preload="auto">
+  <source src="https://dizzy-copper-ruozmxajuk.edgeone.app/original%20sound%20-%20.%20♬%20❦_musicaldown.com_1761437252.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const bgMusic = document.getElementById("bgMusic");
+  const textElement = document.getElementById("text");
+  const tapText = document.getElementById("tapText");
+
+  const wordsSet = ["YOU", "WIL", "BE", "MY GIRL", "MY GIRL", "MY GIRL", "MY GIRL", "MY GIRL"];
+  const colors = ["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#FF6BFF","#FF9F40","#00FFC2","#FF3C38"];
+  const delay = 600;
+  const pauseAfterFirstSet = 2200; // 2,2 detik pause setelah pengulangan pertama
+
+  window.addEventListener('click', startAll, { once: true });
+  window.addEventListener('touchstart', startAll, { once: true });
+
+  function startAll() {
+    tapText.style.display = 'none';
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    bgMusic.currentTime = 0;
+    bgMusic.volume = 0.9;
+    bgMusic.play().catch(() => console.log("Autoplay blocked"));
+
+    startLyricsWithPause();
+    startRain();
+    startParticles();
+    startStars();
+
+    setTimeout(() => { bgMusic.pause(); bgMusic.currentTime = 0; }, 14000);
+  }
+
+  async function startLyricsWithPause() {
+    await showWords(wordsSet, delay);      // pengulangan pertama
+    await delayMs(pauseAfterFirstSet);     // pause 2,2 detik
+    await showWords(wordsSet, delay);      // pengulangan kedua
+  }
+
+  function showWords(words, delayTime) {
+    return new Promise((resolve) => {
+      let index = 0;
+      function next() {
+        textElement.classList.remove("show");
+        setTimeout(() => {
+          textElement.textContent = words[index];
+          textElement.style.color = colors[index % colors.length];
+          textElement.style.textShadow = `0 0 10px ${colors[index % colors.length]}, 0 0 20px ${colors[index % colors.length]}`;
+          textElement.classList.add("show");
+          index++;
+          if (index < words.length) setTimeout(next, delayTime);
+          else resolve();
+        }, 100);
+      }
+      next();
+    });
+  }
+
+  function delayMs(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+  function startRain() {
+    setInterval(() => {
+      const drop = document.createElement("div");
+      drop.classList.add("raindrop");
+      drop.style.left = Math.random() * 100 + "vw";
+      drop.style.animationDuration = (Math.random() * 1 + 1.2) + "s";
+      document.body.appendChild(drop);
+      setTimeout(() => drop.remove(), 2500);
+    }, 60);
+  }
+
+  function startParticles() {
+    setInterval(() => {
+      const p = document.createElement("div");
+      p.classList.add("particle");
+      const size = Math.random() * 5 + 2;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.bottom = "0px";
+      p.style.animationDuration = (Math.random() * 5 + 3) + "s";
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 8000);
+    }, 200);
+  }
+
+  function startStars() {
+    setInterval(() => {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight;
+      createStar(x, y);
+    }, 700);
+  }
+
+  function createStar(x, y) {
+    const star = document.createElement("div");
+    star.classList.add("star");
+    star.style.left = `${x - 10}px`;
+    star.style.top = `${y - 10}px`;
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 1500);
+  }
+</script>
+
+</body>
+</html>
